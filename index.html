@@ -3,159 +3,289 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#0f3638">
-<title>Drive Uploader</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#6c63ff">
+<title>DriveUp — Google Drive Uploader</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root,[data-theme="light"]{
-  --bg:#f7f6f2;--surface:#ffffff;--surface2:#f3f0ec;
-  --border:#dcd9d5;--text:#28251d;--muted:#7a7974;--faint:#bab9b4;
-  --primary:#01696f;--primary-h:#0c4e54;--primary-hl:#cedcd8;
-  --success:#437a22;--success-hl:#d4dfcc;
-  --error:#a12c7b;--error-hl:#e0ced7;
-  --warn:#8a6000;--warn-hl:#f5edcc;
-  --shadow:0 4px 24px rgba(0,0,0,0.10);
-  --radius:1rem;--radius-sm:0.6rem;--radius-full:9999px;
-  --font:"Inter",sans-serif;--trans:180ms cubic-bezier(0.16,1,0.3,1);
+:root {
+  --bg:#f0f2ff;--surface:#ffffff;--surface2:#f5f6ff;
+  --border:#e2e4f0;--text:#1a1b2e;--muted:#6b7280;--faint:#b0b4c4;
+  --primary:#6c63ff;--primary-h:#5348e8;--primary-hl:#ede9ff;
+  --primary-glow:rgba(108,99,255,0.25);
+  --success:#10b981;--success-hl:#d1fae5;
+  --error:#ef4444;--error-hl:#fee2e2;
+  --warn:#f59e0b;--warn-hl:#fef3c7;
+  --shadow:0 8px 40px rgba(108,99,255,0.12);
+  --shadow-sm:0 2px 12px rgba(0,0,0,0.08);
+  --radius:1.25rem;--radius-sm:0.75rem;--radius-full:9999px;
+  --font:"Inter",sans-serif;--trans:200ms cubic-bezier(0.16,1,0.3,1);
 }
-[data-theme="dark"]{
-  --bg:#0e0d0c;--surface:#1c1b19;--surface2:#252422;
-  --border:#393836;--text:#cdccca;--muted:#797876;--faint:#5a5957;
-  --primary:#4f98a3;--primary-h:#227f8b;--primary-hl:#1e3436;
-  --success:#6daa45;--success-hl:#2a3a22;
-  --error:#d163a7;--error-hl:#3d2035;
-  --warn:#c9a12a;--warn-hl:#2e2610;
-  --shadow:0 4px 32px rgba(0,0,0,0.5);
+[data-theme="dark"] {
+  --bg:#0d0d1a;--surface:#13131f;--surface2:#1a1a2e;
+  --border:#2a2a3e;--text:#e8e8f0;--muted:#8888a8;--faint:#4a4a6a;
+  --primary:#7c73ff;--primary-h:#6c63ff;--primary-hl:#1e1a3e;
+  --primary-glow:rgba(124,115,255,0.3);
+  --success:#10b981;--success-hl:#052e20;
+  --error:#f87171;--error-hl:#2d1515;
+  --warn:#fbbf24;--warn-hl:#2d2005;
+  --shadow:0 8px 40px rgba(0,0,0,0.5);
+  --shadow-sm:0 2px 12px rgba(0,0,0,0.3);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:none}
-body{min-height:100dvh;font-family:var(--font);color:var(--text);background:var(--bg);
+body{
+  min-height:100dvh;font-family:var(--font);color:var(--text);background:var(--bg);
   display:flex;flex-direction:column;align-items:center;
-  padding:1rem 1rem 2rem;transition:background var(--trans),color var(--trans)}
+  padding:0 1rem 3rem;
+  transition:background var(--trans),color var(--trans);
+  background-image:
+    radial-gradient(ellipse at 20% 0%,rgba(108,99,255,0.08) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 100%,rgba(16,185,129,0.06) 0%,transparent 60%);
+}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
 a{text-decoration:none}
 
-.header{width:100%;max-width:480px;display:flex;align-items:center;justify-content:space-between;padding:.75rem 0 1rem}
-.logo{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.1rem;color:var(--text)}
-.logo svg{color:var(--primary)}
+/* HEADER */
+.header{width:100%;max-width:500px;display:flex;align-items:center;justify-content:space-between;padding:1.25rem 0 1rem}
+.logo{display:flex;align-items:center;gap:.6rem;font-weight:800;font-size:1.15rem;letter-spacing:-.02em}
+.logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--primary),#a78bfa);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px var(--primary-glow);
+}
+.logo-icon svg{color:#fff}
+.logo-text{background:linear-gradient(135deg,var(--primary),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hbtns{display:flex;gap:.4rem}
-.icon-btn{width:40px;height:40px;border-radius:var(--radius-full);background:var(--surface2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all var(--trans);flex-shrink:0}
-.icon-btn:hover{color:var(--text);background:var(--border)}
+.icon-btn{
+  width:38px;height:38px;border-radius:var(--radius-full);
+  background:var(--surface);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);transition:all var(--trans);box-shadow:var(--shadow-sm);
+}
+.icon-btn:hover{color:var(--primary);border-color:var(--primary);background:var(--primary-hl)}
 .icon-btn.active{background:var(--primary-hl);border-color:var(--primary);color:var(--primary)}
 
-.settings-panel{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;display:none;box-shadow:var(--shadow)}
+/* SETTINGS */
+.settings-panel{
+  width:100%;max-width:500px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.4rem;
+  margin-bottom:1rem;display:none;box-shadow:var(--shadow);
+}
 .settings-panel.open{display:block}
-.sp-title{font-size:.9rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;color:var(--primary)}
-.sp-row{margin-bottom:.85rem}
-.sp-row label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.35rem}
-.sp-row input{width:100%;padding:.6rem .8rem;border-radius:var(--radius-sm);border:1px solid var(--border);
-  background:var(--surface2);color:var(--text);font:inherit;font-size:.85rem;outline:none;transition:border-color var(--trans)}
-.sp-row input:focus{border-color:var(--primary)}
+.sp-title{
+  font-size:.88rem;font-weight:700;margin-bottom:1.1rem;
+  display:flex;align-items:center;gap:.5rem;
+  background:linear-gradient(135deg,var(--primary),#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.sp-row{margin-bottom:.9rem}
+.sp-row label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.4rem}
+.sp-row input{
+  width:100%;padding:.65rem .9rem;border-radius:var(--radius-sm);
+  border:1.5px solid var(--border);background:var(--surface2);
+  color:var(--text);font:inherit;font-size:.85rem;outline:none;
+  transition:border-color var(--trans),box-shadow var(--trans);
+}
+.sp-row input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
 .sp-row input::placeholder{color:var(--faint)}
-.sp-hint{font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.5}
+.sp-hint{font-size:.71rem;color:var(--muted);margin-top:.3rem;line-height:1.5}
 .sp-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
-.sp-btn{padding:.55rem 1rem;border-radius:var(--radius-sm);font-size:.84rem;font-weight:600;transition:all var(--trans)}
-.sp-btn.primary{background:var(--primary);color:#fff}
-.sp-btn.primary:hover{background:var(--primary-h)}
-.sp-btn.ghost{border:1px solid var(--border);color:var(--muted)}
+.sp-btn{padding:.55rem 1.1rem;border-radius:var(--radius-sm);font-size:.84rem;font-weight:600;transition:all var(--trans)}
+.sp-btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary-h));color:#fff;box-shadow:0 4px 12px var(--primary-glow)}
+.sp-btn.primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--primary-glow)}
+.sp-btn.ghost{border:1.5px solid var(--border);color:var(--muted)}
 .sp-btn.ghost:hover{background:var(--surface2);color:var(--text)}
-.sp-btn.danger{border:1px solid var(--error);color:var(--error)}
+.sp-btn.danger{border:1.5px solid var(--error);color:var(--error)}
 .sp-btn.danger:hover{background:var(--error-hl)}
 
-.oauth-bar{width:100%;max-width:480px;border-radius:var(--radius-sm);padding:.7rem 1rem;
-  margin-bottom:.75rem;font-size:.82rem;font-weight:500;display:flex;align-items:center;gap:.5rem;
-  border:1px solid var(--border);background:var(--surface2)}
+/* OAUTH BAR */
+.oauth-bar{
+  width:100%;max-width:500px;border-radius:var(--radius-sm);
+  padding:.75rem 1rem;margin-bottom:.85rem;
+  font-size:.82rem;font-weight:500;
+  display:flex;align-items:center;gap:.55rem;
+  border:1.5px solid var(--border);background:var(--surface);
+  box-shadow:var(--shadow-sm);
+}
 .oauth-bar.logged-in{border-color:var(--success);background:var(--success-hl);color:var(--success)}
 .oauth-bar.logged-out{border-color:var(--warn);background:var(--warn-hl);color:var(--warn)}
-.oauth-bar-btn{margin-left:auto;padding:.3rem .75rem;border-radius:var(--radius-full);font-size:.75rem;font-weight:600;transition:all var(--trans);flex-shrink:0}
+.oauth-bar-btn{
+  margin-left:auto;padding:.32rem .85rem;border-radius:var(--radius-full);
+  font-size:.75rem;font-weight:700;transition:all var(--trans);flex-shrink:0;
+}
 .oauth-bar.logged-in .oauth-bar-btn{background:var(--success);color:#fff}
+.oauth-bar.logged-in .oauth-bar-btn:hover{opacity:.85}
 .oauth-bar.logged-out .oauth-bar-btn{background:var(--warn);color:#fff}
+.oauth-bar.logged-out .oauth-bar-btn:hover{opacity:.85}
 
-.card{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:1.75rem 1.5rem;box-shadow:var(--shadow)}
-.card-title{font-size:1.3rem;font-weight:700;margin-bottom:.2rem}
-.card-sub{font-size:.85rem;color:var(--muted);margin-bottom:1.4rem}
+/* CARD */
+.card{
+  width:100%;max-width:500px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1.75rem 1.5rem;box-shadow:var(--shadow);
+}
+.card-title{
+  font-size:1.35rem;font-weight:800;margin-bottom:.2rem;letter-spacing:-.02em;
+  background:linear-gradient(135deg,var(--text) 0%,var(--primary) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.card-sub{font-size:.84rem;color:var(--muted);margin-bottom:1.5rem}
 
-.dropzone{border:2px dashed var(--border);border-radius:var(--radius);padding:2rem 1rem;
-  text-align:center;cursor:pointer;transition:all var(--trans);background:var(--surface2);position:relative}
-.dropzone.dragover{border-color:var(--primary);background:var(--primary-hl)}
+/* DROPZONE */
+.dropzone{
+  border:2px dashed var(--border);border-radius:var(--radius);
+  padding:2.25rem 1rem;text-align:center;cursor:pointer;
+  transition:all var(--trans);background:var(--surface2);position:relative;overflow:hidden;
+}
+.dropzone::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--primary-hl),transparent);
+  opacity:0;transition:opacity var(--trans);
+}
+.dropzone:hover,.dropzone.dragover{border-color:var(--primary);transform:scale(1.005)}
+.dropzone:hover::before,.dropzone.dragover::before{opacity:1}
 .dropzone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.dz-icon{width:52px;height:52px;border-radius:var(--radius);background:var(--primary-hl);color:var(--primary);
-  display:flex;align-items:center;justify-content:center;margin:0 auto .85rem}
-.dz-title{font-size:.95rem;font-weight:600;margin-bottom:.2rem}
+.dz-icon{
+  width:56px;height:56px;border-radius:16px;
+  background:linear-gradient(135deg,var(--primary),#a78bfa);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto .9rem;box-shadow:0 8px 24px var(--primary-glow);
+}
+.dz-icon svg{color:#fff}
+.dz-title{font-size:1rem;font-weight:700;margin-bottom:.25rem}
 .dz-sub{font-size:.78rem;color:var(--muted)}
-.dz-badges{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin-top:.7rem}
-.badge{font-size:.68rem;font-weight:500;padding:.18rem .5rem;border-radius:var(--radius-full);
-  background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.dz-badges{display:flex;gap:.3rem;flex-wrap:wrap;justify-content:center;margin-top:.8rem}
+.badge{
+  font-size:.68rem;font-weight:600;padding:.2rem .6rem;border-radius:var(--radius-full);
+  background:var(--surface);border:1.5px solid var(--border);color:var(--muted);transition:all var(--trans);
+}
+.badge:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-hl)}
 
-.file-info{display:none;align-items:center;gap:.75rem;padding:.85rem 1rem;margin-top:.9rem;
-  background:var(--primary-hl);border:1px solid var(--primary);border-radius:var(--radius-sm)}
+/* FILE INFO */
+.file-info{
+  display:none;align-items:center;gap:.85rem;
+  padding:.9rem 1rem;margin-top:1rem;
+  background:var(--primary-hl);border:1.5px solid var(--primary);border-radius:var(--radius-sm);
+}
 .file-info.show{display:flex}
-.fi-icon{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--primary);color:#fff;
-  flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.fi-icon{
+  width:42px;height:42px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--primary),#a78bfa);
+  color:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px var(--primary-glow);
+}
 .fi-details{flex:1;min-width:0}
-.fi-name{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fi-size{font-size:.73rem;color:var(--muted);margin-top:.1rem}
-.fi-remove{width:30px;height:30px;border-radius:var(--radius-full);color:var(--muted);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--trans)}
-.fi-remove:hover{background:var(--border);color:var(--text)}
+.fi-name{font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-size{font-size:.73rem;color:var(--muted);margin-top:.12rem}
+.fi-remove{
+  width:30px;height:30px;border-radius:var(--radius-full);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--trans);
+}
+.fi-remove:hover{background:var(--error-hl);color:var(--error)}
 
-.progress-wrap{display:none;margin-top:1.1rem}
+/* PROGRESS */
+.progress-wrap{display:none;margin-top:1.2rem}
 .progress-wrap.show{display:block}
-.prog-top{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.45rem;align-items:center}
-.prog-top span:first-child{color:var(--muted)}
-.prog-pct{font-weight:700;color:var(--primary);font-size:.95rem}
-.prog-bg{height:10px;border-radius:var(--radius-full);background:var(--surface2);overflow:hidden}
-.prog-bar{height:100%;border-radius:var(--radius-full);
-  background:linear-gradient(90deg,var(--primary),var(--primary-h));
-  width:0%;transition:width .25s ease}
-.prog-bar.done{background:linear-gradient(90deg,var(--success),#5ab030)}
+.prog-top{display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:.5rem;align-items:center}
+.prog-top span:first-child{color:var(--muted);font-weight:500}
+.prog-pct{
+  font-weight:800;font-size:1rem;
+  background:linear-gradient(135deg,var(--primary),#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.prog-bg{height:10px;border-radius:var(--radius-full);background:var(--surface2);border:1px solid var(--border);overflow:hidden}
+.prog-bar{
+  height:100%;border-radius:var(--radius-full);
+  background:linear-gradient(90deg,var(--primary),#a78bfa);
+  width:0%;transition:width .3s ease;box-shadow:0 0 12px var(--primary-glow);
+}
+.prog-bar.done{background:linear-gradient(90deg,var(--success),#34d399);box-shadow:0 0 12px rgba(16,185,129,.4)}
 
-.upload-btn{width:100%;margin-top:1.1rem;padding:1rem;background:var(--primary);color:#fff;
-  border-radius:var(--radius-sm);font-size:1rem;font-weight:600;
+/* UPLOAD BTN */
+.upload-btn{
+  width:100%;margin-top:1.2rem;padding:1rem;
+  background:linear-gradient(135deg,var(--primary),#a78bfa);
+  color:#fff;border-radius:var(--radius-sm);font-size:1rem;font-weight:700;
   display:flex;align-items:center;justify-content:center;gap:.5rem;
-  transition:all var(--trans);min-height:52px}
-.upload-btn:hover:not(:disabled){background:var(--primary-h);transform:translateY(-1px);box-shadow:var(--shadow)}
-.upload-btn:active:not(:disabled){transform:none}
-.upload-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;
-  border-radius:50%;animation:spin .75s linear infinite;display:none}
+  transition:all var(--trans);min-height:54px;
+  box-shadow:0 6px 24px var(--primary-glow);letter-spacing:.01em;
+}
+.upload-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 32px var(--primary-glow)}
+.upload-btn:active:not(:disabled){transform:translateY(0)}
+.upload-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
 .upload-btn.loading .btn-label{display:none}
 .upload-btn.loading .spinner{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.result{display:none;margin-top:1.1rem;padding:1.1rem;border-radius:var(--radius-sm)}
+/* RESULT */
+.result{display:none;margin-top:1.2rem;padding:1.2rem;border-radius:var(--radius-sm)}
 .result.show{display:block}
-.result.success{border:1px solid var(--success);background:var(--success-hl)}
-.result.error{border:1px solid var(--error);background:var(--error-hl)}
-.res-title{display:flex;align-items:center;gap:.45rem;font-weight:700;font-size:.95rem;margin-bottom:.7rem}
+.result.success{border:1.5px solid var(--success);background:var(--success-hl)}
+.result.error{border:1.5px solid var(--error);background:var(--error-hl)}
+.res-header{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem}
+.res-icon-wrap{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.result.success .res-icon-wrap{background:rgba(16,185,129,.2);color:var(--success)}
+.result.error .res-icon-wrap{background:rgba(239,68,68,.2);color:var(--error)}
+.res-title-block{flex:1}
+.res-title{font-weight:800;font-size:.95rem}
 .result.success .res-title{color:var(--success)}
 .result.error .res-title{color:var(--error)}
-.res-link-lbl{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem}
-.res-link-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
-  padding:.6rem .8rem;font-size:.77rem;font-family:monospace;color:var(--muted);
-  word-break:break-all;line-height:1.5;margin-bottom:.7rem}
+.res-sub{font-size:.73rem;color:var(--muted);margin-top:.1rem}
+
+.link-row{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:.75rem .9rem;margin-bottom:.75rem;
+}
+.link-row-label{
+  font-size:.65rem;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem;
+  display:flex;align-items:center;gap:.3rem;
+}
+.link-dot{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block}
+.link-text{
+  font-size:.77rem;font-family:monospace;color:var(--text);
+  word-break:break-all;line-height:1.5;
+}
+
 .res-actions{display:flex;gap:.55rem;flex-wrap:wrap}
-.act-btn{flex:1;min-width:110px;padding:.6rem .8rem;border-radius:var(--radius-sm);
-  font-size:.83rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:.35rem;transition:all var(--trans)}
-.act-btn.primary{background:var(--primary);color:#fff}
-.act-btn.primary:hover{background:var(--primary-h)}
-.act-btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
-.act-btn.ghost:hover{background:var(--surface2)}
-.act-btn.copied{background:var(--success)!important;color:#fff!important;border-color:transparent!important}
+.act-btn{
+  flex:1;min-width:100px;padding:.65rem .9rem;border-radius:var(--radius-sm);
+  font-size:.83rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:.35rem;transition:all var(--trans);
+}
+.act-btn.primary{background:linear-gradient(135deg,var(--primary),#a78bfa);color:#fff;box-shadow:0 4px 12px var(--primary-glow)}
+.act-btn.primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px var(--primary-glow)}
+.act-btn.ghost{background:transparent;color:var(--text);border:1.5px solid var(--border)}
+.act-btn.ghost:hover{background:var(--surface2);border-color:var(--primary);color:var(--primary)}
+.act-btn.success-btn{background:linear-gradient(135deg,var(--success),#34d399);color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.3)}
+.act-btn.success-btn:hover{transform:translateY(-1px)}
 
-.again-btn{width:100%;margin-top:.65rem;padding:.7rem;border-radius:var(--radius-sm);
-  font-size:.875rem;font-weight:500;color:var(--muted);border:1px solid var(--border);
-  background:transparent;transition:all var(--trans)}
-.again-btn:hover{background:var(--surface2);color:var(--text)}
+.again-btn{
+  width:100%;margin-top:.7rem;padding:.75rem;border-radius:var(--radius-sm);
+  font-size:.875rem;font-weight:600;color:var(--muted);
+  border:1.5px solid var(--border);background:transparent;transition:all var(--trans);
+}
+.again-btn:hover{background:var(--surface2);color:var(--primary);border-color:var(--primary)}
 
-.footer{margin-top:1.5rem;font-size:.72rem;color:var(--faint);text-align:center;line-height:1.8}
+.footer{margin-top:2rem;font-size:.72rem;color:var(--faint);text-align:center;line-height:1.8}
+.footer a{color:var(--primary)}
 
-.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--text);color:var(--bg);padding:.6rem 1.2rem;border-radius:var(--radius-full);
-  font-size:.82rem;font-weight:600;opacity:0;transition:all .3s ease;z-index:9999;white-space:nowrap;pointer-events:none}
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--text);color:var(--bg);
+  padding:.6rem 1.4rem;border-radius:var(--radius-full);
+  font-size:.82rem;font-weight:700;opacity:0;
+  transition:all .3s ease;z-index:9999;
+  white-space:nowrap;pointer-events:none;
+  box-shadow:0 4px 20px rgba(0,0,0,.3);
+}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -163,22 +293,24 @@ a{text-decoration:none}
 
 <header class="header">
   <div class="logo">
-    <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
-      <rect width="28" height="28" rx="8" fill="currentColor" opacity="0.15"/>
-      <path d="M8 18L12 10L16 16L19 13L22 18H8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
-      <circle cx="19" cy="10" r="2" fill="currentColor"/>
-    </svg>
-    DriveUp
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <span class="logo-text">DriveUp</span>
   </div>
   <div class="hbtns">
     <button class="icon-btn" id="settingsBtn" title="Settings">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
     <button class="icon-btn" id="themeBtn" title="Toggle Theme">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>
     </button>
@@ -187,21 +319,21 @@ a{text-decoration:none}
 
 <div class="settings-panel" id="settingsPanel">
   <div class="sp-title">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <circle cx="12" cy="12" r="3"/>
       <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
     </svg>
-    API Settings
+    API Configuration
   </div>
   <div class="sp-row">
-    <label>Google OAuth2 Client ID</label>
+    <label>OAuth 2.0 Client ID</label>
     <input type="text" id="clientIdInput" placeholder="xxxxxx.apps.googleusercontent.com">
-    <div class="sp-hint">Google Cloud Console → Credentials → OAuth 2.0 Client IDs</div>
+    <div class="sp-hint">Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID (Web application type)</div>
   </div>
   <div class="sp-row">
-    <label>Upload Folder ID <span style="font-weight:400;text-transform:none">(optional)</span></label>
-    <input type="text" id="folderIdInput" placeholder="1ABCxyz... (blank = root Drive)">
-    <div class="sp-hint">Open folder in Drive → copy ID from URL</div>
+    <label>Upload Folder ID <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+    <input type="text" id="folderIdInput" placeholder="1ABCxyz... (blank = My Drive root)">
+    <div class="sp-hint">Open folder in Drive → copy ID from URL bar</div>
   </div>
   <div class="sp-actions">
     <button class="sp-btn primary" id="saveSettingsBtn">Save Settings</button>
@@ -222,31 +354,32 @@ a{text-decoration:none}
 
 <main class="card">
   <h1 class="card-title">Upload to Google Drive</h1>
-  <p class="card-sub">Any file · Up to 5 GB · Instant public link</p>
+  <p class="card-sub">Any file · Up to 5 GB · Instant direct link</p>
 
   <div class="dropzone" id="dropzone">
     <input type="file" id="fileInput">
     <div class="dz-icon">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
         <polyline points="17 8 12 3 7 8"/>
         <line x1="12" y1="3" x2="12" y2="15"/>
       </svg>
     </div>
     <p class="dz-title">Tap to select file</p>
-    <p class="dz-sub">or drag & drop here</p>
+    <p class="dz-sub">or drag & drop anywhere here</p>
     <div class="dz-badges">
       <span class="badge">APK</span>
       <span class="badge">Images</span>
       <span class="badge">Videos</span>
       <span class="badge">ZIP</span>
+      <span class="badge">PDF</span>
       <span class="badge">Any file</span>
     </div>
   </div>
 
   <div class="file-info" id="fileInfo">
     <div class="fi-icon">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
         <polyline points="14 2 14 8 20 8"/>
       </svg>
@@ -275,7 +408,8 @@ a{text-decoration:none}
 
   <button class="upload-btn" id="uploadBtn" disabled>
     <span class="btn-label">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block;vertical-align:middle;margin-right:5px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="display:inline-block;vertical-align:middle;margin-right:5px">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
         <polyline points="17 8 12 3 7 8"/>
         <line x1="12" y1="3" x2="12" y2="15"/>
@@ -286,15 +420,19 @@ a{text-decoration:none}
   </button>
 
   <div class="result" id="result">
-    <div class="res-title" id="resTitle">
-      <svg id="resIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-        <polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      <span id="resTitleText">Upload Successful!</span>
+    <div class="res-header">
+      <div class="res-icon-wrap" id="resIconWrap">
+        <svg id="resIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="res-title-block">
+        <div class="res-title" id="resTitleText">Upload Successful!</div>
+        <div class="res-sub" id="resSub">File is now public on Google Drive</div>
+      </div>
     </div>
-    <div class="res-link-lbl" id="resLinkLbl">Download Link</div>
-    <div class="res-link-box" id="resLinkBox"></div>
+    <div id="linkRows"></div>
     <div class="res-actions" id="resActions"></div>
   </div>
 
@@ -302,32 +440,35 @@ a{text-decoration:none}
 </main>
 
 <footer class="footer">
-  Google OAuth2 · Files auto-made public<br>
-  <span style="color:var(--primary);cursor:pointer" onclick="openSettings()">⚙️ Settings</span>
+  Secured with Google OAuth2 &nbsp;·&nbsp; Files auto-made public<br>
+  <a href="#" onclick="openSettings();return false;">⚙️ Configure API</a>
 </footer>
 
 <div class="toast" id="toast"></div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-// ── Config ────────────────────────────────────────────────────────────────────
-let CLIENT_ID    = localStorage.getItem('gd_client_id') || '514744867182-s793amncrbco1rgg6263gdr929cnlemp.apps.googleusercontent.com';
-let FOLDER_ID    = localStorage.getItem('gd_folder_id') || '';
-let accessToken  = null;
-let tokenClient  = null;
-let selectedFile = null;
+let CLIENT_ID   = localStorage.getItem('gd_client_id') || '';
+let FOLDER_ID   = localStorage.getItem('gd_folder_id') || '';
+let accessToken = null;
+let tokenClient = null;
+let selectedFile= null;
 
-// ── Theme ─────────────────────────────────────────────────────────────────────
+// ── Theme ──────────────────────────────────────────────────────────────
 const root = document.documentElement;
 let theme = localStorage.getItem('theme') || 'dark';
 root.setAttribute('data-theme', theme);
+const moonSVG = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const sunSVG  = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+document.getElementById('themeIcon').innerHTML = theme === 'dark' ? moonSVG : sunSVG;
 document.getElementById('themeBtn').addEventListener('click', () => {
   theme = theme === 'dark' ? 'light' : 'dark';
   root.setAttribute('data-theme', theme);
   localStorage.setItem('theme', theme);
+  document.getElementById('themeIcon').innerHTML = theme === 'dark' ? moonSVG : sunSVG;
 });
 
-// ── Settings ──────────────────────────────────────────────────────────────────
+// ── Settings ───────────────────────────────────────────────────────────
 const settingsPanel = document.getElementById('settingsPanel');
 const clientIdInput = document.getElementById('clientIdInput');
 const folderIdInput = document.getElementById('folderIdInput');
@@ -348,32 +489,28 @@ document.getElementById('settingsBtn').addEventListener('click', () =>
 document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   const cid = clientIdInput.value.trim();
-  if (!cid) { showToast('Client ID cannot be empty!'); return; }
+  if (!cid) { showToast('⚠️ Client ID cannot be empty!'); return; }
   CLIENT_ID = cid;
   FOLDER_ID = folderIdInput.value.trim();
   localStorage.setItem('gd_client_id', CLIENT_ID);
   localStorage.setItem('gd_folder_id', FOLDER_ID);
-  accessToken = null;
-  tokenClient = null;
+  accessToken = null; tokenClient = null;
   updateOauthBar(false);
   closeSettings();
-  showToast('✓ Saved! Sign in again.');
+  showToast('✓ Settings saved!');
   initGIS();
 });
 document.getElementById('clearSettingsBtn').addEventListener('click', () => {
   if (!confirm('Clear all saved settings?')) return;
   localStorage.clear();
-  CLIENT_ID = '';
-  FOLDER_ID = '';
-  accessToken = null;
-  tokenClient = null;
-  clientIdInput.value = '';
-  folderIdInput.value = '';
+  CLIENT_ID = ''; FOLDER_ID = '';
+  accessToken = null; tokenClient = null;
+  clientIdInput.value = ''; folderIdInput.value = '';
   updateOauthBar(false);
   showToast('Settings cleared.');
 });
 
-// ── OAuth Bar ─────────────────────────────────────────────────────────────────
+// ── OAuth ──────────────────────────────────────────────────────────────
 function updateOauthBar(loggedIn, email) {
   const bar  = document.getElementById('oauthBar');
   const stat = document.getElementById('oauthStatus');
@@ -382,23 +519,18 @@ function updateOauthBar(loggedIn, email) {
   bar.className = 'oauth-bar ' + (loggedIn ? 'logged-in' : 'logged-out');
   if (loggedIn) {
     icon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
-    stat.textContent = email ? 'Signed in: ' + email : '✓ Google connected';
-    btn.textContent  = 'Sign Out';
-    btn.onclick      = signOut;
+    stat.textContent = email ? '✓ ' + email : '✓ Google connected';
+    btn.textContent = 'Sign Out';
+    btn.onclick = signOut;
   } else {
     icon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
     stat.textContent = 'Not signed in — tap to connect';
-    btn.textContent  = 'Sign In';
-    btn.onclick      = requestToken;
+    btn.textContent = 'Sign In';
+    btn.onclick = requestToken;
   }
 }
-function signOut() {
-  accessToken = null;
-  updateOauthBar(false);
-  showToast('Signed out.');
-}
+function signOut() { accessToken = null; updateOauthBar(false); showToast('Signed out.'); }
 
-// ── Google Identity Services ──────────────────────────────────────────────────
 function initGIS() {
   if (!CLIENT_ID || !window.google) return;
   tokenClient = google.accounts.oauth2.initTokenClient({
@@ -411,7 +543,7 @@ function initGIS() {
         headers: { Authorization: 'Bearer ' + accessToken }
       }).then(r => r.json()).then(info => {
         updateOauthBar(true, info.email || '');
-        showToast('✓ Signed in!');
+        showToast('✓ Signed in successfully!');
       }).catch(() => updateOauthBar(true, ''));
     }
   });
@@ -429,15 +561,17 @@ window.addEventListener('load', () => {
     if (s) s.addEventListener('load', initGIS);
   }
   updateOauthBar(false);
+  if (!CLIENT_ID) setTimeout(openSettings, 800);
 });
 
-// ── File Select ───────────────────────────────────────────────────────────────
-const fileInput  = document.getElementById('fileInput');
-const dropzone   = document.getElementById('dropzone');
-const fileInfo   = document.getElementById('fileInfo');
-const fileNameEl = document.getElementById('fileName');
-const fileSizeEl = document.getElementById('fileSize');
-const uploadBtn  = document.getElementById('uploadBtn');
+// ── File ───────────────────────────────────────────────────────────────
+const fileInput = document.getElementById('fileInput');
+const dropzone  = document.getElementById('dropzone');
+const fileInfo  = document.getElementById('fileInfo');
+const uploadBtn = document.getElementById('uploadBtn');
+const progBar   = document.getElementById('progBar');
+const progPct   = document.getElementById('progPct');
+const progLabel = document.getElementById('progLabel');
 
 function fmtSize(b) {
   if (b < 1024) return b + ' B';
@@ -447,8 +581,8 @@ function fmtSize(b) {
 }
 function setFile(f) {
   selectedFile = f;
-  fileNameEl.textContent = f.name;
-  fileSizeEl.textContent = fmtSize(f.size);
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileSize').textContent = fmtSize(f.size);
   fileInfo.classList.add('show');
   uploadBtn.disabled = false;
   document.getElementById('result').classList.remove('show','success','error');
@@ -456,8 +590,7 @@ function setFile(f) {
   document.getElementById('againBtn').style.display = 'none';
 }
 function clearFile() {
-  selectedFile = null;
-  fileInput.value = '';
+  selectedFile = null; fileInput.value = '';
   fileInfo.classList.remove('show');
   uploadBtn.disabled = true;
 }
@@ -466,15 +599,9 @@ fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fil
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
 dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
 dropzone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropzone.classList.remove('dragover');
+  e.preventDefault(); dropzone.classList.remove('dragover');
   if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
 });
-
-// ── Progress ──────────────────────────────────────────────────────────────────
-const progBar   = document.getElementById('progBar');
-const progPct   = document.getElementById('progPct');
-const progLabel = document.getElementById('progLabel');
 
 function setProgress(pct, label) {
   document.getElementById('progressWrap').classList.add('show');
@@ -486,14 +613,10 @@ function setProgress(pct, label) {
   else progBar.classList.remove('done');
 }
 
-// ── Upload ────────────────────────────────────────────────────────────────────
+// ── Upload ─────────────────────────────────────────────────────────────
 uploadBtn.addEventListener('click', async () => {
   if (!selectedFile) return;
-  if (!accessToken) {
-    showToast('Please sign in to Google first!');
-    requestToken();
-    return;
-  }
+  if (!accessToken) { showToast('Please sign in first!'); requestToken(); return; }
 
   uploadBtn.classList.add('loading');
   uploadBtn.disabled = true;
@@ -502,12 +625,11 @@ uploadBtn.addEventListener('click', async () => {
   document.getElementById('againBtn').style.display = 'none';
 
   try {
-    // Step 1 — Create resumable session
     const meta = { name: selectedFile.name };
     if (FOLDER_ID) meta.parents = [FOLDER_ID];
 
     const initResp = await fetch(
-      'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,size,mimeType,webContentLink,webViewLink',
       {
         method: 'POST',
         headers: {
@@ -522,8 +644,7 @@ uploadBtn.addEventListener('click', async () => {
 
     if (!initResp.ok) {
       if (initResp.status === 401) {
-        accessToken = null;
-        updateOauthBar(false);
+        accessToken = null; updateOauthBar(false);
         throw new Error('Session expired. Please sign in again.');
       }
       const err = await initResp.json().catch(() => ({}));
@@ -533,24 +654,23 @@ uploadBtn.addEventListener('click', async () => {
     const uploadUrl = initResp.headers.get('Location');
     if (!uploadUrl) throw new Error('No upload URL returned. Try again.');
 
-    // Step 2 — Upload with real XHR progress (1% → 90%)
     setProgress(1, 'Uploading…');
-    const fileId = await new Promise((resolve, reject) => {
+
+    const uploadData = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', uploadUrl);
       xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
       xhr.setRequestHeader('Content-Type', selectedFile.type || 'application/octet-stream');
-
       xhr.upload.onprogress = e => {
         if (e.lengthComputable) {
-          const pct = 1 + (e.loaded / e.total) * 89; // 1% → 90%
+          const pct = 1 + (e.loaded / e.total) * 87;
           setProgress(pct, 'Uploading… ' + fmtSize(e.loaded) + ' / ' + fmtSize(e.total));
         }
       };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          try { resolve(JSON.parse(xhr.responseText).id); }
-          catch { reject(new Error('Invalid response from Drive.')); }
+          try { resolve(JSON.parse(xhr.responseText)); }
+          catch { reject(new Error('Invalid response.')); }
         } else {
           try {
             const e = JSON.parse(xhr.responseText);
@@ -562,8 +682,9 @@ uploadBtn.addEventListener('click', async () => {
       xhr.send(selectedFile);
     });
 
-    // Step 3 — Make public (91% → 95%)
-    setProgress(92, 'Making file public…');
+    const fileId = uploadData.id;
+    setProgress(91, 'Making file public…');
+
     const permResp = await fetch(
       `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
       {
@@ -575,14 +696,21 @@ uploadBtn.addEventListener('click', async () => {
         body: JSON.stringify({ role: 'reader', type: 'anyone' })
       }
     );
-    if (!permResp.ok) throw new Error('Uploaded but could not make public. Share manually.');
+    if (!permResp.ok) throw new Error('Uploaded but could not make public.');
 
-    // Step 4 — Done! (100%)
-    setProgress(100, 'Upload complete!');
+    setProgress(96, 'Getting download link…');
+    const fileResp = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,name,size,mimeType,webContentLink,webViewLink`,
+      { headers: { 'Authorization': 'Bearer ' + accessToken } }
+    );
+    const fileData = await fileResp.json();
 
-    const downloadLink = `https://drive.google.com/uc?id=${fileId}&export=download`;
-    const viewLink     = `https://drive.google.com/file/d/${fileId}/view`;
-    showSuccess(downloadLink, viewLink);
+    setProgress(100, 'Done! ✓');
+
+    const directLink = `https://drive.google.com/uc?id=${fileId}&export=download&confirm=t`;
+    const viewLink   = fileData.webViewLink || `https://drive.google.com/file/d/${fileId}/view`;
+
+    showSuccess(fileId, directLink, viewLink, fileData);
 
   } catch (err) {
     showError(err.message);
@@ -592,64 +720,78 @@ uploadBtn.addEventListener('click', async () => {
   }
 });
 
-// ── Success ───────────────────────────────────────────────────────────────────
-function showSuccess(dl, vl) {
+// ── Show Results ───────────────────────────────────────────────────────
+function showSuccess(fileId, directLink, viewLink, fileData) {
   const r = document.getElementById('result');
   r.className = 'result show success';
-  document.getElementById('resTitle').style.color = 'var(--success)';
   document.getElementById('resTitleText').textContent = 'Upload Successful! 🎉';
-  document.getElementById('resIcon').innerHTML =
-    '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
-  document.getElementById('resLinkLbl').style.display = 'block';
-  document.getElementById('resLinkBox').textContent = dl;
+  const nameStr = (fileData && fileData.name) ? fileData.name : (selectedFile ? selectedFile.name : '');
+  const sizeStr = (fileData && fileData.size) ? ' · ' + fmtSize(parseInt(fileData.size)) : '';
+  document.getElementById('resSub').textContent = nameStr + sizeStr;
+  document.getElementById('resIcon').innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+
+  document.getElementById('linkRows').innerHTML = `
+    <div class="link-row">
+      <div class="link-row-label">
+        <span class="link-dot"></span>
+        Direct Download Link
+      </div>
+      <div class="link-text">${directLink}</div>
+    </div>`;
+
   document.getElementById('resActions').innerHTML = `
-    <a class="act-btn primary" href="${dl}" target="_blank" rel="noopener">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <a class="act-btn primary" href="${directLink}" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
       Download
     </a>
-    <a class="act-btn ghost" href="${vl}" target="_blank" rel="noopener">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    <a class="act-btn ghost" href="${viewLink}" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
       View
     </a>
-    <button class="act-btn ghost" id="copyBtn" onclick="copyLink('${dl}')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      Copy
+    <button class="act-btn success-btn" id="copyBtn" onclick="copyLink('${directLink}')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="9" y="9" width="13" height="13" rx="2"/>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      Copy Link
     </button>`;
+
   document.getElementById('againBtn').style.display = 'block';
-  showToast('File uploaded successfully!');
+  showToast('✓ Uploaded! Direct link ready.');
 }
 
-// ── Copy ──────────────────────────────────────────────────────────────────────
 function copyLink(url) {
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('copyBtn');
     if (!btn) return;
-    btn.classList.add('copied');
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-    showToast('Link copied!');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    showToast('✓ Link copied to clipboard!');
     setTimeout(() => {
       if (!btn) return;
-      btn.classList.remove('copied');
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy';
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Link`;
     }, 2500);
   });
 }
 
-// ── Error ─────────────────────────────────────────────────────────────────────
 function showError(msg) {
   const r = document.getElementById('result');
   r.className = 'result show error';
-  document.getElementById('resTitle').style.color = 'var(--error)';
   document.getElementById('resTitleText').textContent = 'Upload Failed!';
-  document.getElementById('resIcon').innerHTML =
-    '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-  document.getElementById('resLinkLbl').style.display = 'none';
-  document.getElementById('resLinkBox').textContent = '⚠️ ' + msg;
+  document.getElementById('resSub').textContent = 'Check settings and try again';
+  document.getElementById('resIcon').innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+  document.getElementById('linkRows').innerHTML = `<div class="link-row"><div class="link-row-label">Error Details</div><div class="link-text">⚠️ ${msg}</div></div>`;
   document.getElementById('resActions').innerHTML = '';
   document.getElementById('againBtn').style.display = 'block';
+  showToast('❌ Upload failed!');
 }
 
-// ── Reset ─────────────────────────────────────────────────────────────────────
 function resetAll() {
   clearFile();
   document.getElementById('progressWrap').classList.remove('show');
@@ -660,14 +802,13 @@ function resetAll() {
   document.getElementById('againBtn').style.display = 'none';
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 </script>
 </body>
