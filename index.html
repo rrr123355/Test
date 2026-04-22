@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#6c63ff">
-<title>DriveUp Pro - Direct APK Download</title>
+<title>DriveUp Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* (পুরনো CSS ঠিক রাখা হয়েছে, কোনো পরিবর্তন নেই) */
 :root{
   --bg:#f0f2ff;--surface:#fff;--surface2:#f5f6ff;--border:#e2e4f0;
   --text:#1a1b2e;--muted:#6b7280;--faint:#b0b4c4;
@@ -186,7 +185,7 @@ a{text-decoration:none}
 .info-note{background:var(--warn-hl);border:1.5px solid var(--warn);border-radius:var(--radius-sm);padding:.7rem .9rem;font-size:.75rem;color:var(--warn);line-height:1.6;margin-bottom:.75rem;display:flex;gap:.5rem;align-items:flex-start}
 .info-note svg{flex-shrink:0;margin-top:.05rem}
 
-/* UPLOADS LIST */
+/* UPLOADS SECTION */
 .uploads-section{margin-top:1.4rem}
 .uploads-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
 .uploads-title{font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:.4rem}
@@ -338,7 +337,7 @@ a{text-decoration:none}
 <!-- MAIN CARD -->
 <main class="card">
   <h1 class="card-title">Upload to Google Drive</h1>
-  <p class="card-sub">Any file · Direct download (no virus warning) · APK supported</p>
+  <p class="card-sub">Any file · Up to 5 GB · APK/EXE direct download (no warning)</p>
 
   <div class="dropzone" id="dropzone">
     <input type="file" id="fileInput">
@@ -430,7 +429,7 @@ a{text-decoration:none}
 </main>
 
 <footer class="footer">
-  Secured with Google OAuth2 · Files auto-made public · <strong>Direct download no warning</strong><br>
+  Secured with Google OAuth2 · Files auto-made public · APK/EXE direct download via API (no virus warning)<br>
   <a href="#" onclick="openSettings();return false;">⚙️ Configure API</a>
 </footer>
 
@@ -450,14 +449,73 @@ a{text-decoration:none}
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-// ── State ────────────────────────────────────────────────────────────────
+// ==================== STATE (original + token refresh) ====================
 let CLIENT_ID = localStorage.getItem('gd_client_id') || '';
 let FOLDER_ID = localStorage.getItem('gd_folder_id') || '';
-let accessToken = null, tokenClient = null, selectedFile = null;
+let accessToken = localStorage.getItem('gd_access_token') || null;
+let tokenExpiry = parseInt(localStorage.getItem('gd_token_expiry') || '0');
+let tokenClient = null;
+let selectedFile = null;
 let uploads = JSON.parse(localStorage.getItem('gd_uploads') || '[]');
 let pendingDelId = null, pendingDelFileId = null;
 
-// ── Theme ────────────────────────────────────────────────────────────────
+// ==================== HELPER ====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.toastTmr);
+  window.toastTmr = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function fmtSize(b) {
+  b = +b;
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b/1048576).toFixed(2) + ' MB';
+  return (b/1073741824).toFixed(2) + ' GB';
+}
+function getExt(n) { return (n.split('.').pop()||'FILE').toUpperCase().slice(0,4); }
+
+// Check if file is executable (APK, EXE, etc.)
+function isExecutable(filename) {
+  const ext = filename.split('.').pop().toLowerCase();
+  return ['apk','exe','msi','bat','cmd','sh','bin','dmg','deb','rpm'].includes(ext);
+}
+
+// ==================== TOKEN AUTO-REFRESH ====================
+function isTokenValid() {
+  return accessToken && Date.now() < tokenExpiry - 60000; // 1 min buffer
+}
+
+async function refreshTokenSilently() {
+  if (!tokenClient) {
+    if (window.google && CLIENT_ID) initGIS();
+    else return false;
+  }
+  return new Promise((resolve) => {
+    tokenClient.requestAccessToken({ prompt: '' }, (resp) => {
+      if (resp.error) { resolve(false); return; }
+      accessToken = resp.access_token;
+      tokenExpiry = Date.now() + 3600000;
+      localStorage.setItem('gd_access_token', accessToken);
+      localStorage.setItem('gd_token_expiry', tokenExpiry);
+      updateOAuthBar(true);
+      resolve(true);
+    });
+  });
+}
+
+async function ensureValidToken() {
+  if (isTokenValid()) return true;
+  if (accessToken && !isTokenValid()) {
+    const ok = await refreshTokenSilently();
+    if (ok) return true;
+  }
+  return false;
+}
+
+// ==================== THEME ====================
 const root = document.documentElement;
 let theme = localStorage.getItem('theme') || 'dark';
 root.setAttribute('data-theme', theme);
@@ -471,7 +529,7 @@ document.getElementById('themeBtn').addEventListener('click', () => {
   document.getElementById('themeIcon').innerHTML = theme === 'dark' ? moonSVG : sunSVG;
 });
 
-// ── Avatar ────────────────────────────────────────────────────────────────
+// ==================== AVATAR & NAME ====================
 (function loadAvatar() {
   const saved = localStorage.getItem('gd_avatar');
   if (!saved) return;
@@ -492,7 +550,6 @@ document.getElementById('avatarInput').addEventListener('change', function () {
   r.readAsDataURL(f);
 });
 
-// ── Profile Name ──────────────────────────────────────────────────────────
 document.getElementById('profileName').textContent =
   localStorage.getItem('gd_name') || 'Guest User';
 
@@ -515,7 +572,7 @@ document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Escape') document.getElementById('nameInputWrap').classList.remove('show');
 });
 
-// ── Settings ──────────────────────────────────────────────────────────────
+// ==================== SETTINGS ====================
 const settingsPanel = document.getElementById('settingsPanel');
 function openSettings() {
   document.getElementById('clientIdInput').value = CLIENT_ID;
@@ -537,19 +594,28 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   FOLDER_ID = document.getElementById('folderIdInput').value.trim();
   localStorage.setItem('gd_client_id', CLIENT_ID);
   localStorage.setItem('gd_folder_id', FOLDER_ID);
-  accessToken = null; tokenClient = null;
-  updateOAuthBar(false); closeSettings();
-  showToast('✓ Settings saved!'); initGIS();
+  // Clear old token
+  accessToken = null;
+  tokenExpiry = 0;
+  localStorage.removeItem('gd_access_token');
+  localStorage.removeItem('gd_token_expiry');
+  tokenClient = null;
+  updateOAuthBar(false);
+  closeSettings();
+  showToast('✓ Settings saved!');
+  initGIS();
 });
 document.getElementById('clearSettingsBtn').addEventListener('click', () => {
   if (!confirm('Clear all settings?')) return;
-  ['gd_client_id','gd_folder_id'].forEach(k => localStorage.removeItem(k));
+  ['gd_client_id','gd_folder_id','gd_access_token','gd_token_expiry'].forEach(k => localStorage.removeItem(k));
   CLIENT_ID = ''; FOLDER_ID = '';
-  accessToken = null; tokenClient = null;
-  updateOAuthBar(false); showToast('Settings cleared.');
+  accessToken = null; tokenExpiry = 0;
+  tokenClient = null;
+  updateOAuthBar(false);
+  showToast('Settings cleared.');
 });
 
-// ── OAuth2 ────────────────────────────────────────────────────────────────
+// ==================== OAUTH ====================
 function updateOAuthBar(on, email) {
   const bar = document.getElementById('oauthBar');
   const stat = document.getElementById('oauthStatus');
@@ -573,7 +639,14 @@ function updateOAuthBar(on, email) {
     statusEl.innerHTML = '<svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg> Offline';
   }
 }
-function signOut() { accessToken = null; updateOAuthBar(false); showToast('Signed out.'); }
+function signOut() {
+  accessToken = null;
+  tokenExpiry = 0;
+  localStorage.removeItem('gd_access_token');
+  localStorage.removeItem('gd_token_expiry');
+  updateOAuthBar(false);
+  showToast('Signed out.');
+}
 function initGIS() {
   if (!CLIENT_ID || !window.google) return;
   tokenClient = google.accounts.oauth2.initTokenClient({
@@ -582,11 +655,14 @@ function initGIS() {
     callback: resp => {
       if (resp.error) { showToast('Auth error: ' + resp.error); return; }
       accessToken = resp.access_token;
+      tokenExpiry = Date.now() + 3600000;
+      localStorage.setItem('gd_access_token', accessToken);
+      localStorage.setItem('gd_token_expiry', tokenExpiry);
       fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: 'Bearer ' + accessToken }
       }).then(r => r.json()).then(info => {
         updateOAuthBar(true, info.email || '');
-        showToast('✓ Signed in!');
+        showToast('✓ Signed in! Token auto-refreshes.');
       }).catch(() => updateOAuthBar(true, ''));
     }
   });
@@ -601,24 +677,27 @@ window.addEventListener('load', () => {
   if (window.google) initGIS();
   else document.querySelector('script[src*="accounts.google.com"]')
     ?.addEventListener('load', initGIS);
-  updateOAuthBar(false);
+  // Restore existing token if still valid
+  if (accessToken && Date.now() < tokenExpiry) {
+    updateOAuthBar(true);
+  } else {
+    updateOAuthBar(false);
+  }
   if (!CLIENT_ID) setTimeout(openSettings, 700);
   renderUploads();
 });
 
-// ── File ──────────────────────────────────────────────────────────────────
+// Auto-refresh token every 50 minutes
+setInterval(async () => {
+  if (accessToken && tokenClient) {
+    await refreshTokenSilently();
+  }
+}, 50 * 60 * 1000);
+
+// ==================== FILE HANDLING ====================
 const fileInput = document.getElementById('fileInput');
 const dropzone  = document.getElementById('dropzone');
 const uploadBtn = document.getElementById('uploadBtn');
-
-function fmtSize(b) {
-  b = +b;
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  if (b < 1073741824) return (b/1048576).toFixed(2) + ' MB';
-  return (b/1073741824).toFixed(2) + ' GB';
-}
-function getExt(n) { return (n.split('.').pop()||'FILE').toUpperCase().slice(0,4); }
 
 function setFile(f) {
   selectedFile = f;
@@ -653,10 +732,15 @@ function setProg(pct, label) {
   document.getElementById('progBar').classList.toggle('done', p >= 100);
 }
 
-// ── Upload ────────────────────────────────────────────────────────────────
+// ==================== UPLOAD ====================
 uploadBtn.addEventListener('click', async () => {
   if (!selectedFile) return;
-  if (!accessToken) { showToast('Please sign in first!'); requestToken(); return; }
+  const tokenOk = await ensureValidToken();
+  if (!tokenOk || !accessToken) {
+    showToast('Please sign in first!');
+    requestToken();
+    return;
+  }
 
   uploadBtn.classList.add('loading'); uploadBtn.disabled = true;
   setProg(0, 'Preparing…');
@@ -667,7 +751,6 @@ uploadBtn.addEventListener('click', async () => {
     const meta = { name: selectedFile.name };
     if (FOLDER_ID) meta.parents = [FOLDER_ID];
 
-    // Step 1 – Init resumable upload
     const initR = await fetch(
       'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,size',
       {
@@ -682,7 +765,7 @@ uploadBtn.addEventListener('click', async () => {
       }
     );
     if (!initR.ok) {
-      if (initR.status === 401) { accessToken = null; updateOAuthBar(false); throw new Error('Session expired. Sign in again.'); }
+      if (initR.status === 401) { await refreshTokenSilently(); throw new Error('Session refreshed, please retry.'); }
       const e = await initR.json().catch(()=>({}));
       throw new Error(e?.error?.message || 'Init failed: HTTP ' + initR.status);
     }
@@ -690,7 +773,6 @@ uploadBtn.addEventListener('click', async () => {
     if (!uploadUrl) throw new Error('No upload URL returned.');
     setProg(2, 'Uploading…');
 
-    // Step 2 – Upload file with progress
     const fileData = await new Promise((res, rej) => {
       const xhr = new XMLHttpRequest();
       xhr.open('PUT', uploadUrl);
@@ -715,7 +797,6 @@ uploadBtn.addEventListener('click', async () => {
     const fileId = fileData.id;
     setProg(91, 'Making file public…');
 
-    // Step 3 – Make public (anyone can read)
     const permR = await fetch(
       `https://www.googleapis.com/drive/v3/files/${fileId}/permissions`,
       {
@@ -734,22 +815,24 @@ uploadBtn.addEventListener('click', async () => {
 
     setProg(100, 'Done! ✓');
 
-    // ─── DIRECT LINKS USING drive.usercontent.google.com (NO WARNING) ───
-    // This domain bypasses the virus scan warning page for APK and other executables.
-    const directLink = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
-    const viewLink   = `https://drive.usercontent.google.com/uc?id=${fileId}&export=download`;
+    // ─── LINKS ─────────────────────────────────────────
+    // Public link (may show warning for APK/EXE)
+    const publicLink = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
+    // API direct download (bypasses warning, requires token)
+    const apiLink = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const isExe = isExecutable(selectedFile.name);
 
     // Save to history
     const item = {
       id: Date.now().toString(), fileId,
       name: selectedFile.name, size: selectedFile.size,
-      directLink, viewLink,
+      publicLink, apiLink,
       date: new Date().toLocaleDateString('en-IN')
     };
     uploads.unshift(item);
     localStorage.setItem('gd_uploads', JSON.stringify(uploads));
     renderUploads();
-    showSuccess(directLink, viewLink, fileData);
+    showSuccess(publicLink, apiLink, fileData, isExe);
 
   } catch (err) {
     showError(err.message);
@@ -758,8 +841,8 @@ uploadBtn.addEventListener('click', async () => {
   }
 });
 
-// ── Show Results (with download attribute for APK) ────────────────────────
-function showSuccess(dl, vl, fd) {
+// ==================== SHOW RESULT (with API download for APK) ====================
+function showSuccess(publicLink, apiLink, fd, isExe) {
   const r = document.getElementById('result');
   r.className = 'result show success';
   document.getElementById('resTitleText').textContent = 'Upload Successful! 🎉';
@@ -768,50 +851,62 @@ function showSuccess(dl, vl, fd) {
   document.getElementById('resIcon').innerHTML =
     '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
 
-  // Check if file is video
-  const isVideo = selectedFile && selectedFile.type.startsWith('video/');
-  let videoHtml = '';
-  if (isVideo) {
-    videoHtml = `
-      <div style="margin-top: 1rem; border-radius: var(--radius-sm); overflow: hidden; background: #000;">
-        <video controls autoplay style="width: 100%; max-height: 320px;">
-          <source src="${vl}" type="${selectedFile.type}">
-          Your browser does not support video.
-        </video>
-      </div>
-    `;
+  let downloadButton = '';
+  if (isExe) {
+    downloadButton = `<button class="act-btn primary" id="apiDownloadBtn">⬇ Direct Download (No warning)</button>`;
+  } else {
+    downloadButton = `<a class="act-btn primary" href="${publicLink}" target="_blank" rel="noopener">⬇ Download</a>`;
   }
 
   document.getElementById('linkRows').innerHTML = `
     <div class="link-row">
-      <div class="link-label"><span class="link-dot"></span>Direct Download Link (No Warning)</div>
-      <div class="link-text">${dl}</div>
-    </div>
-    ${videoHtml}
-  `;
+      <div class="link-label"><span class="link-dot"></span>Public Link</div>
+      <div class="link-text">${publicLink}</div>
+    </div>`;
 
-  // For APK or any file, we add the 'download' attribute to force save dialog
   document.getElementById('resActions').innerHTML = `
-    <a class="act-btn primary" href="${dl}" download="${selectedFile?.name || 'file'}" target="_blank" rel="noopener">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>Download Now
-    </a>
-    <a class="act-btn ghost" href="${vl}" target="_blank" rel="noopener">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>View
-    </a>
-    <button class="act-btn green" onclick="copyLink('${dl}')">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="9" y="9" width="13" height="13" rx="2"/>
-        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-      </svg>Copy Link
-    </button>`;
+    ${downloadButton}
+    <a class="act-btn ghost" href="${publicLink}" target="_blank" rel="noopener">🔗 View</a>
+    <button class="act-btn green" onclick="copyLink('${publicLink}')">📋 Copy Link</button>`;
+
+  if (isExe) {
+    document.getElementById('apiDownloadBtn').onclick = () => downloadWithToken(apiLink, selectedFile.name);
+  }
+
+  // Video player if video
+  if (selectedFile && selectedFile.type.startsWith('video/')) {
+    const videoHtml = `<div style="margin-top:1rem"><video controls style="width:100%;max-height:250px"><source src="${publicLink}" type="${selectedFile.type}"></video></div>`;
+    document.getElementById('linkRows').innerHTML += videoHtml;
+  }
+
   document.getElementById('againBtn').style.display = 'block';
-  showToast('✓ Uploaded! Direct download ready – no virus warning.');
+  showToast('✓ Uploaded! For APK/EXE use "Direct Download" button.');
+}
+
+async function downloadWithToken(url, filename) {
+  const tokenOk = await ensureValidToken();
+  if (!tokenOk || !accessToken) {
+    showToast('Please sign in first');
+    requestToken();
+    return;
+  }
+  showToast('Starting download...');
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + accessToken } });
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    const objUrl = URL.createObjectURL(blob);
+    a.href = objUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objUrl);
+    showToast('Download started');
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
 }
 
 function copyLink(url) {
@@ -841,8 +936,9 @@ function resetAll() {
   document.getElementById('result').classList.remove('show','success','error');
   document.getElementById('againBtn').style.display = 'none';
 }
+document.getElementById('againBtn').addEventListener('click', resetAll);
 
-// ── Uploads List ──────────────────────────────────────────────────────────
+// ==================== UPLOADS LIST ====================
 function renderUploads() {
   const sec  = document.getElementById('uploadsSection');
   const list = document.getElementById('uploadsList');
@@ -858,7 +954,7 @@ function renderUploads() {
         <div class="ui-meta">${fmtSize(u.size)} · ${u.date}</div>
       </div>
       <div class="ui-btns">
-        <button class="ui-btn copy" title="Copy link" onclick="copyDirect('${u.directLink}')">
+        <button class="ui-btn copy" title="Copy link" onclick="copyLink('${u.publicLink}')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -875,9 +971,7 @@ function renderUploads() {
       </div>
     </div>`).join('');
 }
-function copyDirect(url) {
-  navigator.clipboard.writeText(url).then(() => showToast('✓ Link copied!'));
-}
+function copyDirect(url) { copyLink(url); }
 document.getElementById('clearAllBtn').addEventListener('click', () => {
   if (!confirm('Clear upload history? (Files stay on Drive)')) return;
   uploads = [];
@@ -885,7 +979,7 @@ document.getElementById('clearAllBtn').addEventListener('click', () => {
   renderUploads(); showToast('✓ History cleared.');
 });
 
-// ── Delete from Drive ─────────────────────────────────────────────────────
+// ==================== DELETE FROM DRIVE ====================
 function confirmDelete(id, fileId, name) {
   pendingDelId = id; pendingDelFileId = fileId;
   document.getElementById('modalBody').textContent =
@@ -904,12 +998,10 @@ async function doDelete() {
   confirmBtn.textContent = 'Deleting…';
   closeModal();
 
-  // Remove from local list immediately
   uploads = uploads.filter(u => u.id !== lid);
   localStorage.setItem('gd_uploads', JSON.stringify(uploads));
   renderUploads();
 
-  // Delete from Google Drive
   if (fid && accessToken) {
     try {
       const r = await fetch(
@@ -921,8 +1013,8 @@ async function doDelete() {
       } else if (r.status === 404) {
         showToast('File not found on Drive (already deleted).');
       } else if (r.status === 401) {
-        accessToken = null; updateOAuthBar(false);
-        showToast('⚠️ Session expired — sign in to delete from Drive.');
+        await refreshTokenSilently();
+        showToast('⚠️ Session refreshed, please try delete again.');
       } else {
         showToast('⚠️ Drive delete failed: HTTP ' + r.status);
       }
@@ -931,15 +1023,6 @@ async function doDelete() {
     showToast('⚠️ Sign in to delete from Drive.');
   }
   confirmBtn.disabled = false;
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────
-let toastTmr;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTmr);
-  toastTmr = setTimeout(() => t.classList.remove('show'), 2800);
 }
 </script>
 </body>
