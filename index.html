@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#6c63ff">
-<title>DriveUp Pro - Direct Download & Video</title>
+<title>DriveUp Pro - Direct APK Download</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* (পুরনো CSS ঠিক রাখা হয়েছে, কোনো পরিবর্তন নেই) */
 :root{
   --bg:#f0f2ff;--surface:#fff;--surface2:#f5f6ff;--border:#e2e4f0;
   --text:#1a1b2e;--muted:#6b7280;--faint:#b0b4c4;
@@ -337,7 +338,7 @@ a{text-decoration:none}
 <!-- MAIN CARD -->
 <main class="card">
   <h1 class="card-title">Upload to Google Drive</h1>
-  <p class="card-sub">Any file · Up to 5 GB · Direct links (no login)</p>
+  <p class="card-sub">Any file · Direct download (no virus warning) · APK supported</p>
 
   <div class="dropzone" id="dropzone">
     <input type="file" id="fileInput">
@@ -429,7 +430,7 @@ a{text-decoration:none}
 </main>
 
 <footer class="footer">
-  Secured with Google OAuth2 · Files auto-made public · Direct download & video no login required<br>
+  Secured with Google OAuth2 · Files auto-made public · <strong>Direct download no warning</strong><br>
   <a href="#" onclick="openSettings();return false;">⚙️ Configure API</a>
 </footer>
 
@@ -733,10 +734,10 @@ uploadBtn.addEventListener('click', async () => {
 
     setProg(100, 'Done! ✓');
 
-    // ─── DIRECT LINKS (NO LOGIN, NO WARNING) ─────────────────────────────
-    // Use drive.usercontent.google.com – bypasses virus warning & account selection
+    // ─── DIRECT LINKS USING drive.usercontent.google.com (NO WARNING) ───
+    // This domain bypasses the virus scan warning page for APK and other executables.
     const directLink = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
-    const viewLink   = `https://drive.usercontent.google.com/uc?id=${fileId}&export=download`; // works for video streaming as well
+    const viewLink   = `https://drive.usercontent.google.com/uc?id=${fileId}&export=download`;
 
     // Save to history
     const item = {
@@ -757,7 +758,7 @@ uploadBtn.addEventListener('click', async () => {
   }
 });
 
-// ── Show Results (with video player if applicable) ────────────────────────
+// ── Show Results (with download attribute for APK) ────────────────────────
 function showSuccess(dl, vl, fd) {
   const r = document.getElementById('result');
   r.className = 'result show success';
@@ -771,7 +772,6 @@ function showSuccess(dl, vl, fd) {
   const isVideo = selectedFile && selectedFile.type.startsWith('video/');
   let videoHtml = '';
   if (isVideo) {
-    // Use the same viewLink for video source – works directly
     videoHtml = `
       <div style="margin-top: 1rem; border-radius: var(--radius-sm); overflow: hidden; background: #000;">
         <video controls autoplay style="width: 100%; max-height: 320px;">
@@ -784,18 +784,19 @@ function showSuccess(dl, vl, fd) {
 
   document.getElementById('linkRows').innerHTML = `
     <div class="link-row">
-      <div class="link-label"><span class="link-dot"></span>Direct Download Link (No Login)</div>
+      <div class="link-label"><span class="link-dot"></span>Direct Download Link (No Warning)</div>
       <div class="link-text">${dl}</div>
     </div>
     ${videoHtml}
   `;
 
+  // For APK or any file, we add the 'download' attribute to force save dialog
   document.getElementById('resActions').innerHTML = `
-    <a class="act-btn primary" href="${dl}" target="_blank" rel="noopener">
+    <a class="act-btn primary" href="${dl}" download="${selectedFile?.name || 'file'}" target="_blank" rel="noopener">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
         <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>Download
+      </svg>Download Now
     </a>
     <a class="act-btn ghost" href="${vl}" target="_blank" rel="noopener">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -810,13 +811,11 @@ function showSuccess(dl, vl, fd) {
       </svg>Copy Link
     </button>`;
   document.getElementById('againBtn').style.display = 'block';
-  showToast('✓ Uploaded! Direct link ready – no login required.');
+  showToast('✓ Uploaded! Direct download ready – no virus warning.');
 }
 
 function copyLink(url) {
-  navigator.clipboard.writeText(url).then(() => {
-    showToast('✓ Link copied!');
-  });
+  navigator.clipboard.writeText(url).then(() => showToast('✓ Link copied!'));
 }
 
 function showError(msg) {
