@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#6c63ff">
-<title>DriveUp Pro</title>
+<title>DriveUp Pro - Direct Download & Video</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -337,7 +337,7 @@ a{text-decoration:none}
 <!-- MAIN CARD -->
 <main class="card">
   <h1 class="card-title">Upload to Google Drive</h1>
-  <p class="card-sub">Any file · Up to 5 GB · Public link</p>
+  <p class="card-sub">Any file · Up to 5 GB · Direct links (no login)</p>
 
   <div class="dropzone" id="dropzone">
     <input type="file" id="fileInput">
@@ -410,7 +410,7 @@ a{text-decoration:none}
     <div class="res-actions" id="resActions"></div>
   </div>
 
-  <button class="again-btn" id="againBtn" style="display:none" onclick="resetAll()">↑ Upload another file</button>
+  <button class="again-btn" id="againBtn" style="display:none">↑ Upload another file</button>
 
   <!-- HISTORY LIST -->
   <div class="uploads-section" id="uploadsSection" style="display:none">
@@ -429,7 +429,7 @@ a{text-decoration:none}
 </main>
 
 <footer class="footer">
-  Secured with Google OAuth2 · Files auto-made public<br>
+  Secured with Google OAuth2 · Files auto-made public · Direct download & video no login required<br>
   <a href="#" onclick="openSettings();return false;">⚙️ Configure API</a>
 </footer>
 
@@ -733,11 +733,10 @@ uploadBtn.addEventListener('click', async () => {
 
     setProg(100, 'Done! ✓');
 
-    // ─── Direct download link (no account picker) ───────────────────────
-    // authuser=0 → skips "select an account" screen
-    // confirm=t  → skips virus-scan warning
-    const directLink = `https://drive.google.com/uc?id=${fileId}&export=download&confirm=t&authuser=0`;
-    const viewLink   = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+    // ─── DIRECT LINKS (NO LOGIN, NO WARNING) ─────────────────────────────
+    // Use drive.usercontent.google.com – bypasses virus warning & account selection
+    const directLink = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
+    const viewLink   = `https://drive.usercontent.google.com/uc?id=${fileId}&export=download`; // works for video streaming as well
 
     // Save to history
     const item = {
@@ -758,7 +757,7 @@ uploadBtn.addEventListener('click', async () => {
   }
 });
 
-// ── Show Results ──────────────────────────────────────────────────────────
+// ── Show Results (with video player if applicable) ────────────────────────
 function showSuccess(dl, vl, fd) {
   const r = document.getElementById('result');
   r.className = 'result show success';
@@ -768,13 +767,28 @@ function showSuccess(dl, vl, fd) {
   document.getElementById('resIcon').innerHTML =
     '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
 
+  // Check if file is video
+  const isVideo = selectedFile && selectedFile.type.startsWith('video/');
+  let videoHtml = '';
+  if (isVideo) {
+    // Use the same viewLink for video source – works directly
+    videoHtml = `
+      <div style="margin-top: 1rem; border-radius: var(--radius-sm); overflow: hidden; background: #000;">
+        <video controls autoplay style="width: 100%; max-height: 320px;">
+          <source src="${vl}" type="${selectedFile.type}">
+          Your browser does not support video.
+        </video>
+      </div>
+    `;
+  }
+
   document.getElementById('linkRows').innerHTML = `
     <div class="link-row">
-      <div class="link-label">
-        <span class="link-dot"></span>Direct Download Link
-      </div>
+      <div class="link-label"><span class="link-dot"></span>Direct Download Link (No Login)</div>
       <div class="link-text">${dl}</div>
-    </div>`;
+    </div>
+    ${videoHtml}
+  `;
 
   document.getElementById('resActions').innerHTML = `
     <a class="act-btn primary" href="${dl}" target="_blank" rel="noopener">
@@ -789,25 +803,19 @@ function showSuccess(dl, vl, fd) {
         <circle cx="12" cy="12" r="3"/>
       </svg>View
     </a>
-    <button class="act-btn green" id="copyBtn" onclick="copyLink('${dl}')">
+    <button class="act-btn green" onclick="copyLink('${dl}')">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="9" y="9" width="13" height="13" rx="2"/>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-      </svg>Copy
+      </svg>Copy Link
     </button>`;
   document.getElementById('againBtn').style.display = 'block';
-  showToast('✓ Uploaded! Direct link ready.');
+  showToast('✓ Uploaded! Direct link ready – no login required.');
 }
 
 function copyLink(url) {
   navigator.clipboard.writeText(url).then(() => {
-    const b = document.getElementById('copyBtn');
-    if (b) {
-      const orig = b.innerHTML;
-      b.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-      setTimeout(() => { if (b) b.innerHTML = orig; }, 2500);
-    }
-    showToast('✓ Copied!');
+    showToast('✓ Link copied!');
   });
 }
 
